@@ -6,7 +6,7 @@ import argparse
 import logging
 import sys
 from getpass import getpass
-from typing import Callable, Optional
+from typing import Callable
 
 from .app import SpyChatApp, ValidationError
 from .crypto import CryptoError, decrypt, encrypt, is_encrypted
@@ -26,7 +26,7 @@ def _prompt(text: str) -> str:
         return ""
 
 
-def _prompt_int(text: str) -> Optional[int]:
+def _prompt_int(text: str) -> int | None:
     raw = _prompt(text)
     try:
         return int(raw)
@@ -35,7 +35,7 @@ def _prompt_int(text: str) -> Optional[int]:
         return None
 
 
-def _prompt_float(text: str) -> Optional[float]:
+def _prompt_float(text: str) -> float | None:
     raw = _prompt(text)
     try:
         return float(raw)
@@ -129,7 +129,7 @@ class SpyChatCLI:
             )
         return True
 
-    def _select_friend(self) -> Optional[int]:
+    def _select_friend(self) -> int | None:
         if not self._list_friends():
             return None
         choice = _prompt_int("Choose a friend by number: ")
@@ -301,7 +301,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.WARNING,

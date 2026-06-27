@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import List, Optional
 
 
 @dataclass
@@ -23,7 +22,7 @@ class ChatMessage:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ChatMessage":
+    def from_dict(cls, data: dict) -> ChatMessage:
         return cls(
             message=data["message"],
             is_sent_by_me=data["is_sent_by_me"],
@@ -41,7 +40,7 @@ class Spy:
     rating: float
     is_online: bool = True
     current_status_message: str = "Hey there, I am using SpyChat!"
-    chats: List[ChatMessage] = field(default_factory=list)
+    chats: list[ChatMessage] = field(default_factory=list)
 
     @property
     def display_name(self) -> str:
@@ -53,7 +52,7 @@ class Spy:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Spy":
+    def from_dict(cls, data: dict) -> Spy:
         chats = [ChatMessage.from_dict(c) for c in data.get("chats", [])]
         return cls(
             name=data["name"],
@@ -72,9 +71,9 @@ class Spy:
 class Profile:
     """The persisted state of a SpyChat user: the spy plus their friends."""
 
-    spy: Optional[Spy] = None
-    friends: List[Spy] = field(default_factory=list)
-    status_messages: List[str] = field(default_factory=list)
+    spy: Spy | None = None
+    friends: list[Spy] = field(default_factory=list)
+    status_messages: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -84,7 +83,7 @@ class Profile:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Profile":
+    def from_dict(cls, data: dict) -> Profile:
         return cls(
             spy=Spy.from_dict(data["spy"]) if data.get("spy") else None,
             friends=[Spy.from_dict(f) for f in data.get("friends", [])],

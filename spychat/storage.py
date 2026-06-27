@@ -12,9 +12,10 @@ import json
 import logging
 import os
 import tempfile
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Union
+from typing import Union
 
 from .models import Profile
 

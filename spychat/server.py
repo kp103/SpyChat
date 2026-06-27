@@ -26,10 +26,10 @@ from .app import MAX_FRIEND_WORDS, SPECIAL_MESSAGES, SpyChatApp, ValidationError
 from .crypto import CryptoError, decrypt, encrypt, is_encrypted
 from .models import ChatMessage
 from .steganography import (
+    _HEADER_LEN,
     NoHiddenMessageError,
     SteganographyError,
     _capacity_bytes,
-    _HEADER_LEN,
     embed,
     extract,
 )
@@ -94,9 +94,10 @@ def create_app(data_dir: str | Path = DEFAULT_DATA_DIR) -> Flask:
 
     @flask_app.before_request
     def _csrf_guard():
-        if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.path.startswith("/api/"):
-            if request.headers.get(CSRF_HEADER) != CSRF_VALUE:
-                return jsonify({"error": "Missing or invalid CSRF header."}), 403
+        mutating = request.method in ("POST", "PUT", "PATCH", "DELETE")
+        is_api = request.path.startswith("/api/")
+        if mutating and is_api and request.headers.get(CSRF_HEADER) != CSRF_VALUE:
+            return jsonify({"error": "Missing or invalid CSRF header."}), 403
         return None
 
     def login_required(view):
@@ -316,16 +317,16 @@ class _ImageError(Exception):
     """Internal: a user-facing problem opening an uploaded image."""
 
 
-def _open_image(data: bytes) -> "Image.Image":
+def _open_image(data: bytes) -> Image.Image:
     """Open uploaded bytes as an image, guarding against bombs / bad files."""
     try:
         img = Image.open(io.BytesIO(data))
         img.load()  # force decode now so bombs are caught here, not later
         return img
-    except Image.DecompressionBombError:
-        raise _ImageError("Image is too large to process safely.")
-    except (UnidentifiedImageError, OSError):
-        raise _ImageError("Not a valid image.")
+    except Image.DecompressionBombError as exc:
+        raise _ImageError("Image is too large to process safely.") from exc
+    except (UnidentifiedImageError, OSError) as exc:
+        raise _ImageError("Not a valid image.") from exc
 
 
 def _interpret(raw_text: str, passphrase: str) -> dict:
@@ -368,15 +369,15 @@ def _configure_logging() -> None:
 def _as_int(value: Any) -> int:
     try:
         return int(value)
-    except (TypeError, ValueError):
-        raise ValueError("Expected a whole number.")
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Expected a whole number.") from exc
 
 
 def _as_float(value: Any) -> float:
     try:
         return float(value)
-    except (TypeError, ValueError):
-        raise ValueError("Expected a number.")
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Expected a number.") from exc
 
 
 def _err(exc: Exception):
@@ -389,7 +390,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="spychat-web", description="SpyChat web UI")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=5000)
-    parser.add_argument("--data-dir", default=os.environ.get("SPYCHAT_DATA_DIR", str(DEFAULT_DATA_DIR)))
+    parser.add_argument(
+        "--data-dir", default=os.environ.get("SPYCHAT_DATA_DIR", str(DEFAULT_DATA_DIR))
+    )
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args(argv)
 

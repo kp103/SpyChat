@@ -7,7 +7,6 @@ makes them unit-testable and keeps validation in one place.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Optional
 
 from .crypto import CryptoError, decrypt, encrypt, is_encrypted
 from .models import ChatMessage, Profile, Spy
@@ -30,7 +29,7 @@ class ValidationError(Exception):
 class SpyChatApp:
     """Stateful façade over a :class:`Profile`."""
 
-    def __init__(self, profile: Optional[Profile] = None) -> None:
+    def __init__(self, profile: Profile | None = None) -> None:
         self.profile = profile or Profile()
 
     # -- spy / authentication ------------------------------------------------
@@ -55,11 +54,11 @@ class SpyChatApp:
         return spy
 
     @property
-    def spy(self) -> Optional[Spy]:
+    def spy(self) -> Spy | None:
         return self.profile.spy
 
     @property
-    def friends(self) -> List[Spy]:
+    def friends(self) -> list[Spy]:
         return self.profile.friends
 
     # -- friends -------------------------------------------------------------

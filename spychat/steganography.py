@@ -64,7 +64,7 @@ def capacity_for_text(image_path: PathLike) -> int:
     return max(0, _capacity_bytes(width, height) - _HEADER_LEN)
 
 
-def embed(img: "Image.Image", message: str) -> "Image.Image":
+def embed(img: Image.Image, message: str) -> Image.Image:
     """Return a copy of ``img`` (RGB) with ``message`` hidden in its LSBs."""
     img = img.convert("RGB")
     width, height = img.size
@@ -99,7 +99,7 @@ def embed(img: "Image.Image", message: str) -> "Image.Image":
     return out
 
 
-def extract(img: "Image.Image") -> str:
+def extract(img: Image.Image) -> str:
     """Return the message hidden in ``img`` (raises if none/corrupted)."""
     img = img.convert("RGB")
     bits: list[int] = []
