@@ -196,6 +196,7 @@ $("#spy-form").onsubmit = async (e) => {
 function wireDrop(zoneId, fileId, previewId, emptyId, onFile) {
   const zone = $("#" + zoneId), input = $("#" + fileId);
   zone.onclick = () => input.click();
+  zone.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } };
   input.onchange = () => input.files[0] && handle(input.files[0]);
   ["dragover", "dragenter"].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add("drag"); }));
   ["dragleave", "drop"].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove("drag"); }));

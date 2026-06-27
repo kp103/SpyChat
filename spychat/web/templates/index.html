@@ -10,11 +10,11 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="bg-grid"></div>
-  <div class="bg-glow glow-a"></div>
-  <div class="bg-glow glow-b"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow glow-a" aria-hidden="true"></div>
+  <div class="bg-glow glow-b" aria-hidden="true"></div>
 
-  <div id="toast-stack" class="toast-stack"></div>
+  <div id="toast-stack" class="toast-stack" role="status" aria-live="polite"></div>
 
   <!-- Auth (login / register) -->
   <section id="auth" class="onboarding hidden">
@@ -46,13 +46,13 @@
       <div class="brand"><span class="logo">🕵️</span><h1>SpyChat</h1></div>
       <p class="tagline">Hide secret messages inside ordinary images — encrypted, undetectable, yours.</p>
       <form id="spy-form" class="stack">
-        <div class="field"><label>Codename</label><input name="name" placeholder="Bond" autocomplete="off" required /></div>
+        <div class="field"><label for="spy-name-in">Codename</label><input id="spy-name-in" name="name" placeholder="Bond" autocomplete="off" required /></div>
         <div class="row">
-          <div class="field"><label>Title</label>
-            <select name="salutation"><option>Mr.</option><option>Ms.</option><option>Mx.</option></select>
+          <div class="field"><label for="spy-sal-in">Title</label>
+            <select id="spy-sal-in" name="salutation"><option>Mr.</option><option>Ms.</option><option>Mx.</option></select>
           </div>
-          <div class="field"><label>Age</label><input name="age" type="number" min="13" max="49" value="23" required /></div>
-          <div class="field"><label>Rating</label><input name="rating" type="number" step="0.01" min="0" value="4.00" required /></div>
+          <div class="field"><label for="spy-age-in">Age</label><input id="spy-age-in" name="age" type="number" min="13" max="49" value="23" required /></div>
+          <div class="field"><label for="spy-rating-in">Rating</label><input id="spy-rating-in" name="rating" type="number" step="0.01" min="0" value="4.00" required /></div>
         </div>
         <button class="btn primary" type="submit">Authenticate ↗</button>
       </form>
@@ -70,12 +70,12 @@
           <div class="profile-status" id="spy-status">—</div>
         </div>
       </div>
-      <nav class="nav">
-        <button class="nav-item active" data-view="hide"><span>📦</span> Hide</button>
-        <button class="nav-item" data-view="reveal"><span>🔍</span> Reveal</button>
-        <button class="nav-item" data-view="friends"><span>👥</span> Friends</button>
-        <button class="nav-item" data-view="chats"><span>💬</span> Chats</button>
-        <button class="nav-item" data-view="identity"><span>⚙️</span> Identity</button>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="hide"><span aria-hidden="true">📦</span> Hide</button>
+        <button class="nav-item" data-view="reveal"><span aria-hidden="true">🔍</span> Reveal</button>
+        <button class="nav-item" data-view="friends"><span aria-hidden="true">👥</span> Friends</button>
+        <button class="nav-item" data-view="chats"><span aria-hidden="true">💬</span> Chats</button>
+        <button class="nav-item" data-view="identity"><span aria-hidden="true">⚙️</span> Identity</button>
       </nav>
       <button class="nav-item logout" id="logout-btn"><span>🚪</span> Sign out</button>
       <div class="sidebar-foot">LSB steganography · AES-encrypted · v1.0</div>
@@ -87,9 +87,9 @@
         <header class="view-head"><h2>Hide a secret message</h2><p>Drop an image, type your secret, download a PNG that looks identical.</p></header>
         <div class="grid-2">
           <div class="card">
-            <div id="hide-drop" class="dropzone">
+            <div id="hide-drop" class="dropzone" role="button" tabindex="0" aria-label="Choose or drop a carrier image to hide your message in">
               <input type="file" id="hide-file" accept="image/*" hidden />
-              <img id="hide-preview" class="preview hidden" alt="preview" />
+              <img id="hide-preview" class="preview hidden" alt="Preview of the selected carrier image" />
               <div id="hide-drop-empty" class="drop-empty">
                 <div class="drop-icon">🖼️</div>
                 <p><strong>Drop a carrier image</strong></p>
@@ -125,9 +125,9 @@
         <header class="view-head"><h2>Reveal a hidden message</h2><p>Upload a SpyChat image to extract what's inside.</p></header>
         <div class="grid-2">
           <div class="card">
-            <div id="reveal-drop" class="dropzone">
+            <div id="reveal-drop" class="dropzone" role="button" tabindex="0" aria-label="Choose or drop a SpyChat image to reveal its hidden message">
               <input type="file" id="reveal-file" accept="image/*" hidden />
-              <img id="reveal-preview" class="preview hidden" alt="preview" />
+              <img id="reveal-preview" class="preview hidden" alt="Preview of the image to decode" />
               <div id="reveal-drop-empty" class="drop-empty">
                 <div class="drop-icon">🔍</div>
                 <p><strong>Drop the secret image</strong></p>

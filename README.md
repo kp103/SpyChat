@@ -12,12 +12,21 @@ profile.
 
 > Rewritten from the original Python 2 prototype: ported to Python 3, given a
 > self-contained steganography engine (no unmaintained dependencies), AES
-> encryption, persistence, a web app, a CLI, and a full test suite.
+> encryption, multi-user accounts, persistence, a web app, a CLI, and a full
+> test suite.
+
+|  |  |
+|---|---|
+| ![Sign in](docs/screenshots/01-login.png) | ![Hide a message](docs/screenshots/02-hide.png) |
 
 ## Features
 
 - 🖥️ **Modern web UI** — dark glassmorphism interface with drag-and-drop image
   upload, live capacity meter, image preview, and toast notifications.
+- 👤 **Multi-user accounts** — register/login with hashed passwords; each user
+  gets a fully isolated profile.
+- 🛡️ **Hardened** — CSRF protection, upload size limits, decompression-bomb
+  guards, session cookies, and cross-process write locking.
 - 🔒 **Optional encryption** — AES (Fernet) with a scrypt-derived key; hides
   *and* protects the message.
 - 🖼️ **Hide & reveal messages** in PNG/JPEG/BMP carriers (output is always
