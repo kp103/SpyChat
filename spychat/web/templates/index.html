@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpyChat · Hide secrets in plain sight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow glow-a" aria-hidden="true"></div>
+  <div class="bg-glow glow-b" aria-hidden="true"></div>
+
+  <div id="toast-stack" class="toast-stack" role="status" aria-live="polite"></div>
+
+  <!-- Auth (login / register) -->
+  <section id="auth" class="onboarding hidden">
+    <div class="card onboard-card">
+      <div class="brand"><span class="logo">🕵️</span><h1>SpyChat</h1></div>
+      <p class="tagline">Sign in to your dead drop, or create a new identity.</p>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" id="tab-login" role="tab" aria-selected="true">Sign in</button>
+        <button class="auth-tab" id="tab-register" role="tab" aria-selected="false">Register</button>
+      </div>
+      <form id="auth-form" class="stack" autocomplete="on">
+        <div class="field">
+          <label for="auth-user">Username</label>
+          <input id="auth-user" name="username" placeholder="agent_007" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="auth-pass">Password</label>
+          <input id="auth-pass" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+          <small id="auth-hint" class="muted hidden">At least 8 characters.</small>
+        </div>
+        <button class="btn primary" type="submit" id="auth-submit">Sign in ↗</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Onboarding -->
+  <section id="onboarding" class="onboarding hidden">
+    <div class="card onboard-card">
+      <div class="brand"><span class="logo">🕵️</span><h1>SpyChat</h1></div>
+      <p class="tagline">Hide secret messages inside ordinary images — encrypted, undetectable, yours.</p>
+      <form id="spy-form" class="stack">
+        <div class="field"><label for="spy-name-in">Codename</label><input id="spy-name-in" name="name" placeholder="Bond" autocomplete="off" required /></div>
+        <div class="row">
+          <div class="field"><label for="spy-sal-in">Title</label>
+            <select id="spy-sal-in" name="salutation"><option>Mr.</option><option>Ms.</option><option>Mx.</option></select>
+          </div>
+          <div class="field"><label for="spy-age-in">Age</label><input id="spy-age-in" name="age" type="number" min="13" max="49" value="23" required /></div>
+          <div class="field"><label for="spy-rating-in">Rating</label><input id="spy-rating-in" name="rating" type="number" step="0.01" min="0" value="4.00" required /></div>
+        </div>
+        <button class="btn primary" type="submit">Authenticate ↗</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Main app -->
+  <main id="app" class="app hidden">
+    <aside class="sidebar card">
+      <div class="brand small"><span class="logo">🕵️</span><h1>SpyChat</h1></div>
+      <div class="profile-chip">
+        <div class="avatar" id="spy-avatar">B</div>
+        <div>
+          <div class="profile-name" id="spy-name">Mr. Bond</div>
+          <div class="profile-status" id="spy-status">—</div>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="hide"><span aria-hidden="true">📦</span> Hide</button>
+        <button class="nav-item" data-view="reveal"><span aria-hidden="true">🔍</span> Reveal</button>
+        <button class="nav-item" data-view="friends"><span aria-hidden="true">👥</span> Friends</button>
+        <button class="nav-item" data-view="chats"><span aria-hidden="true">💬</span> Chats</button>
+        <button class="nav-item" data-view="identity"><span aria-hidden="true">⚙️</span> Identity</button>
+      </nav>
+      <button class="nav-item logout" id="logout-btn"><span>🚪</span> Sign out</button>
+      <div class="sidebar-foot">LSB steganography · AES-encrypted · v1.0</div>
+    </aside>
+
+    <div class="content">
+      <!-- HIDE -->
+      <section class="view active" data-view="hide">
+        <header class="view-head"><h2>Hide a secret message</h2><p>Drop an image, type your secret, download a PNG that looks identical.</p></header>
+        <div class="grid-2">
+          <div class="card">
+            <div id="hide-drop" class="dropzone" role="button" tabindex="0" aria-label="Choose or drop a carrier image to hide your message in">
+              <input type="file" id="hide-file" accept="image/*" hidden />
+              <img id="hide-preview" class="preview hidden" alt="Preview of the selected carrier image" />
+              <div id="hide-drop-empty" class="drop-empty">
+                <div class="drop-icon">🖼️</div>
+                <p><strong>Drop a carrier image</strong></p>
+                <p class="muted">or click to browse · PNG, JPG, BMP</p>
+              </div>
+            </div>
+            <div id="capacity-wrap" class="capacity hidden">
+              <div class="capacity-bar"><div id="capacity-fill" class="capacity-fill"></div></div>
+              <div class="capacity-label"><span id="capacity-used">0</span> / <span id="capacity-max">0</span> bytes</div>
+            </div>
+          </div>
+          <div class="card stack">
+            <div class="field"><label>Secret message</label>
+              <textarea id="hide-message" rows="5" placeholder="The eagle lands at midnight…"></textarea>
+            </div>
+            <div class="field">
+              <label class="lock-label">
+                <input type="checkbox" id="hide-encrypt" /> Encrypt with passphrase
+                <span class="hint">recommended</span>
+              </label>
+              <input type="password" id="hide-pass" class="hidden" placeholder="Passphrase only you & your contact know" autocomplete="new-password" />
+            </div>
+            <div class="field"><label>Log against friend <span class="muted">(optional)</span></label>
+              <select id="hide-friend"><option value="">— none —</option></select>
+            </div>
+            <button id="hide-btn" class="btn primary" disabled>Hide & download PNG ↓</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- REVEAL -->
+      <section class="view" data-view="reveal">
+        <header class="view-head"><h2>Reveal a hidden message</h2><p>Upload a SpyChat image to extract what's inside.</p></header>
+        <div class="grid-2">
+          <div class="card">
+            <div id="reveal-drop" class="dropzone" role="button" tabindex="0" aria-label="Choose or drop a SpyChat image to reveal its hidden message">
+              <input type="file" id="reveal-file" accept="image/*" hidden />
+              <img id="reveal-preview" class="preview hidden" alt="Preview of the image to decode" />
+              <div id="reveal-drop-empty" class="drop-empty">
+                <div class="drop-icon">🔍</div>
+                <p><strong>Drop the secret image</strong></p>
+                <p class="muted">or click to browse</p>
+              </div>
+            </div>
+          </div>
+          <div class="card stack">
+            <div class="field">
+              <label>Passphrase <span class="muted">(if encrypted)</span></label>
+              <input type="password" id="reveal-pass" placeholder="Leave blank if not encrypted" autocomplete="off" />
+            </div>
+            <div class="field"><label>Log against friend <span class="muted">(optional)</span></label>
+              <select id="reveal-friend"><option value="">— none —</option></select>
+            </div>
+            <button id="reveal-btn" class="btn primary" disabled>Reveal message →</button>
+            <div id="reveal-result" class="reveal-result hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FRIENDS -->
+      <section class="view" data-view="friends">
+        <header class="view-head"><h2>Your network</h2><p>Fellow spies you exchange secrets with.</p></header>
+        <div class="grid-2">
+          <div class="card stack">
+            <h3 class="card-title">Recruit a friend</h3>
+            <div class="field"><label>Codename</label><input id="friend-name" placeholder="Q" /></div>
+            <div class="row">
+              <div class="field"><label>Title</label><select id="friend-sal"><option>Mr.</option><option>Ms.</option><option>Mx.</option></select></div>
+              <div class="field"><label>Age</label><input id="friend-age" type="number" value="40" /></div>
+              <div class="field"><label>Rating</label><input id="friend-rating" type="number" step="0.01" value="5.00" /></div>
+            </div>
+            <button id="friend-add" class="btn primary">Add friend +</button>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Roster</h3>
+            <div id="friends-list" class="friends-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHATS -->
+      <section class="view" data-view="chats">
+        <header class="view-head"><h2>Conversations</h2><p>Decoded & sent message history per contact.</p></header>
+        <div class="grid-2">
+          <div class="card"><h3 class="card-title">Contacts</h3><div id="chat-contacts" class="friends-list"></div></div>
+          <div class="card"><h3 class="card-title" id="chat-title">Select a contact</h3><div id="chat-thread" class="chat-thread"></div></div>
+        </div>
+      </section>
+
+      <!-- IDENTITY -->
+      <section class="view" data-view="identity">
+        <header class="view-head"><h2>Your identity</h2><p>Update your spy profile and status.</p></header>
+        <div class="grid-2">
+          <div class="card stack">
+            <h3 class="card-title">Status message</h3>
+            <div class="field"><textarea id="status-input" rows="2" placeholder="Off the grid…"></textarea></div>
+            <button id="status-save" class="btn primary">Update status</button>
+          </div>
+          <div class="card stack">
+            <h3 class="card-title">Profile</h3>
+            <div id="identity-info" class="identity-info"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
