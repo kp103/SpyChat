@@ -3,17 +3,19 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
-const state = { profile: null, hideFile: null, revealFile: null, capacity: 0, selectedChat: null };
+const state = { username: null, profile: null, hideFile: null, revealFile: null, capacity: 0, selectedChat: null, authMode: "login" };
 
 // ---- API helpers ----------------------------------------------------------
 
 async function api(path, opts = {}) {
+  // CSRF: a custom header browsers won't add on cross-origin form posts.
+  opts.headers = Object.assign({ "X-Requested-With": "SpyChat" }, opts.headers || {});
   const res = await fetch(path, opts);
   const ct = res.headers.get("content-type") || "";
   if (!res.ok) {
     let msg = "Request failed";
     if (ct.includes("application/json")) msg = (await res.json()).error || msg;
-    throw new Error(msg);
+    const err = new Error(msg); err.status = res.status; throw err;
   }
   return ct.includes("application/json") ? res.json() : res.blob();
 }
@@ -40,6 +42,14 @@ function toast(message, kind = "ok") {
 function initials(name) { return (name || "?").trim().charAt(0).toUpperCase() || "?"; }
 
 function render() {
+  // State machine: not signed in -> auth; signed in but no spy -> onboarding; else app.
+  if (!state.username) {
+    $("#auth").classList.remove("hidden");
+    $("#onboarding").classList.add("hidden");
+    $("#app").classList.add("hidden");
+    return;
+  }
+  $("#auth").classList.add("hidden");
   const p = state.profile;
   if (!p || !p.spy) {
     $("#onboarding").classList.remove("hidden");
@@ -128,6 +138,43 @@ $$(".nav-item").forEach(btn => btn.onclick = () => {
   btn.classList.add("active");
   $$(".view").forEach(v => v.classList.toggle("active", v.dataset.view === btn.dataset.view));
 });
+
+// ---- Auth ------------------------------------------------------------------
+
+function setAuthMode(mode) {
+  state.authMode = mode;
+  const login = mode === "login";
+  $("#tab-login").classList.toggle("active", login);
+  $("#tab-register").classList.toggle("active", !login);
+  $("#tab-login").setAttribute("aria-selected", String(login));
+  $("#tab-register").setAttribute("aria-selected", String(!login));
+  $("#auth-submit").textContent = login ? "Sign in ↗" : "Create identity ↗";
+  $("#auth-hint").classList.toggle("hidden", login);
+  $("#auth-pass").setAttribute("autocomplete", login ? "current-password" : "new-password");
+}
+$("#tab-login").onclick = () => setAuthMode("login");
+$("#tab-register").onclick = () => setAuthMode("register");
+
+$("#auth-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const username = $("#auth-user").value, password = $("#auth-pass").value;
+  const path = state.authMode === "login" ? "/api/login" : "/api/register";
+  try {
+    const r = await jpost(path, { username, password });
+    state.username = r.username;
+    $("#auth-pass").value = "";
+    toast(state.authMode === "login" ? "Welcome back, spy." : "Identity created.");
+    await refresh();
+  } catch (err) { toast(err.message, "err"); }
+};
+
+$("#logout-btn").onclick = async () => {
+  try { await api("/api/logout", { method: "POST" }); } catch (_) {}
+  state.username = null; state.profile = null; state.selectedChat = null;
+  setAuthMode("login");
+  render();
+  toast("Signed out.");
+};
 
 // ---- Onboarding ------------------------------------------------------------
 
@@ -291,11 +338,25 @@ $("#status-save").onclick = async () => {
 
 // ---- Boot ------------------------------------------------------------------
 
-async function refresh() { state.profile = await api("/api/profile"); render(); }
+async function refresh() {
+  try {
+    state.profile = await api("/api/profile");
+  } catch (err) {
+    if (err.status === 401) { state.username = null; render(); return; }
+    throw err;
+  }
+  render();
+}
 
 (async function boot() {
-  wireNav();
-  try { await refresh(); } catch (err) { toast("Could not load profile.", "err"); }
+  setAuthMode("login");
+  try {
+    const me = await api("/api/me");
+    state.username = me.username;
+    if (state.username) await refresh();
+    else render();
+  } catch (err) {
+    render();
+    toast("Could not reach the server.", "err");
+  }
 })();
-
-function wireNav() { /* nav wired above; placeholder kept for clarity */ }

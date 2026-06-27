@@ -4,16 +4,19 @@ Example::
 
     gunicorn spychat.wsgi:app --bind 0.0.0.0:8000
 
-The profile location can be set with the ``SPYCHAT_PROFILE`` environment
-variable (defaults to ``~/.spychat/profile.json``); point it at a mounted
-volume so data survives container restarts.
+Configuration via environment variables:
+
+- ``SPYCHAT_DATA_DIR``    — directory for accounts + per-user profiles
+                            (default ``~/.spychat``); mount a volume here.
+- ``SPYCHAT_SECRET_KEY``  — Flask session signing key (set this in production).
+- ``SPYCHAT_MAX_UPLOAD_MB`` — max upload size in MB (default 16).
+- ``SPYCHAT_SECURE_COOKIES=1`` — mark session cookies Secure (behind HTTPS).
 """
 
 from __future__ import annotations
 
 import os
 
-from .server import create_app
-from .storage import DEFAULT_PATH
+from .server import DEFAULT_DATA_DIR, create_app
 
-app = create_app(os.environ.get("SPYCHAT_PROFILE", str(DEFAULT_PATH)))
+app = create_app(os.environ.get("SPYCHAT_DATA_DIR", str(DEFAULT_DATA_DIR)))

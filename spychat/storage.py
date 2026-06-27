@@ -12,10 +12,16 @@ import json
 import logging
 import os
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Union
+from typing import Iterator, Union
 
 from .models import Profile
+
+try:  # POSIX advisory locking; absent on Windows.
+    import fcntl
+except ImportError:  # pragma: no cover - platform-dependent
+    fcntl = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +38,26 @@ class ProfileStore:
 
     def exists(self) -> bool:
         return self.path.exists()
+
+    @contextmanager
+    def lock(self) -> Iterator[None]:
+        """Hold an exclusive cross-process lock for a load-mutate-save cycle.
+
+        Prevents lost updates when multiple workers (e.g. gunicorn) touch the
+        same profile concurrently. Falls back to a no-op where ``fcntl`` is
+        unavailable.
+        """
+        if fcntl is None:  # pragma: no cover
+            yield
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        lock_path = self.path.with_suffix(self.path.suffix + ".lock")
+        with open(lock_path, "w") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle, fcntl.LOCK_UN)
 
     def load(self) -> Profile:
         """Return the stored profile, or an empty one if none exists."""

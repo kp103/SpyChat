@@ -67,6 +67,15 @@ html, body {
 .brand.small h1 { font-size: 20px; }
 .tagline { color: var(--muted); margin: 14px 0 22px; line-height: 1.5; }
 
+/* Auth tabs */
+.auth-tabs { display: flex; gap: 6px; padding: 5px; margin-bottom: 18px; border-radius: 12px;
+  background: rgba(8,12,22,0.6); border: 1px solid var(--border); }
+.auth-tab { flex: 1; padding: 9px; border-radius: 9px; border: none; background: transparent;
+  color: var(--muted); font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; transition: all .18s; }
+.auth-tab.active { background: linear-gradient(135deg, var(--accent), #7a6bff); color: #fff; }
+.auth-tabs + form .field { text-align: left; }
+small.muted { font-size: 11px; }
+
 /* Layout */
 .app { position: relative; z-index: 1; display: grid; grid-template-columns: 248px 1fr;
   gap: 18px; height: 100vh; padding: 18px; }
@@ -90,7 +99,9 @@ html, body {
 .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
 .nav-item.active { background: linear-gradient(90deg, rgba(91,140,255,0.18), rgba(0,224,198,0.06));
   color: #fff; border-color: var(--border-bright); }
-.sidebar-foot { margin-top: auto; font-size: 11px; color: var(--muted); font-family: "JetBrains Mono", monospace; }
+.nav-item.logout { margin-top: auto; color: var(--danger); }
+.nav-item.logout:hover { background: rgba(255,93,115,0.12); }
+.sidebar-foot { font-size: 11px; color: var(--muted); font-family: "JetBrains Mono", monospace; }
 
 /* Views */
 .view { display: none; animation: rise 0.4s cubic-bezier(.2,.8,.2,1); }

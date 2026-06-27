@@ -8,7 +8,8 @@ RUN apt-get update \
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    SPYCHAT_PROFILE=/data/profile.json
+    SPYCHAT_DATA_DIR=/data
+# Set SPYCHAT_SECRET_KEY (and SPYCHAT_SECURE_COOKIES=1 behind HTTPS) at runtime.
 
 WORKDIR /app
 

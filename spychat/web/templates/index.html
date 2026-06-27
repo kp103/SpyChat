@@ -16,6 +16,30 @@
 
   <div id="toast-stack" class="toast-stack"></div>
 
+  <!-- Auth (login / register) -->
+  <section id="auth" class="onboarding hidden">
+    <div class="card onboard-card">
+      <div class="brand"><span class="logo">🕵️</span><h1>SpyChat</h1></div>
+      <p class="tagline">Sign in to your dead drop, or create a new identity.</p>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" id="tab-login" role="tab" aria-selected="true">Sign in</button>
+        <button class="auth-tab" id="tab-register" role="tab" aria-selected="false">Register</button>
+      </div>
+      <form id="auth-form" class="stack" autocomplete="on">
+        <div class="field">
+          <label for="auth-user">Username</label>
+          <input id="auth-user" name="username" placeholder="agent_007" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="auth-pass">Password</label>
+          <input id="auth-pass" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+          <small id="auth-hint" class="muted hidden">At least 8 characters.</small>
+        </div>
+        <button class="btn primary" type="submit" id="auth-submit">Sign in ↗</button>
+      </form>
+    </div>
+  </section>
+
   <!-- Onboarding -->
   <section id="onboarding" class="onboarding hidden">
     <div class="card onboard-card">
@@ -53,6 +77,7 @@
         <button class="nav-item" data-view="chats"><span>💬</span> Chats</button>
         <button class="nav-item" data-view="identity"><span>⚙️</span> Identity</button>
       </nav>
+      <button class="nav-item logout" id="logout-btn"><span>🚪</span> Sign out</button>
       <div class="sidebar-foot">LSB steganography · AES-encrypted · v1.0</div>
     </aside>
 
