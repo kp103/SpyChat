@@ -108,6 +108,36 @@ more (`spychat.steganography.capacity_for_text`).
 > using a scrypt-derived key before hiding it, so the bytes are useless without
 > the passphrase.
 
+## Deployment
+
+The dev server (`spychat-web`) is for local use. For a real deployment, run the
+WSGI app behind a production server.
+
+**Docker (recommended):**
+
+```bash
+docker compose up --build        # serves on http://localhost:8000
+```
+
+The profile is persisted to a named volume (`spychat-data` → `/data`). To run
+the image directly:
+
+```bash
+docker build -t spychat .
+docker run -p 8000:8000 -v spychat-data:/data spychat
+```
+
+**Without Docker (gunicorn):**
+
+```bash
+pip install ".[prod]"
+SPYCHAT_PROFILE=/var/lib/spychat/profile.json \
+  gunicorn spychat.wsgi:app --bind 0.0.0.0:8000 --workers 2
+```
+
+Set `SPYCHAT_PROFILE` to control where the JSON profile is stored. Put it behind
+a TLS-terminating reverse proxy (nginx/Caddy) for public exposure.
+
 ## Development
 
 ```bash
