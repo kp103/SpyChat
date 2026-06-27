@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List, Optional
 
+from .crypto import CryptoError, decrypt, encrypt, is_encrypted
 from .models import ChatMessage, Profile, Spy
 from .steganography import PathLike, decode, encode
 
@@ -107,27 +108,47 @@ class SpyChatApp:
     # -- messaging -----------------------------------------------------------
 
     def send_message(
-        self, friend_index: int, carrier_image: PathLike, output_image: PathLike, text: str
+        self,
+        friend_index: int,
+        carrier_image: PathLike,
+        output_image: PathLike,
+        text: str,
+        passphrase: str = "",
     ) -> Path:
-        """Encode ``text`` into ``carrier_image`` and log it against a friend."""
+        """Encode ``text`` into ``carrier_image`` and log it against a friend.
+
+        If ``passphrase`` is given, the message is encrypted before hiding, so
+        it cannot be read from the image without the same passphrase.
+        """
         self._check_friend_index(friend_index)
         if not text or not text.strip():
             raise ValidationError("Cannot send an empty message.")
-        out = encode(carrier_image, output_image, "#" + text)
+        inner = "#" + text  # "#" marks direction (sent by me)
+        payload = encrypt(inner, passphrase) if passphrase else inner
+        out = encode(carrier_image, output_image, payload)
         self.profile.friends[friend_index].chats.append(
             ChatMessage(message=text, is_sent_by_me=True)
         )
         return out
 
-    def read_message(self, sender_index: int, image_path: PathLike) -> dict:
+    def read_message(
+        self, sender_index: int, image_path: PathLike, passphrase: str = ""
+    ) -> dict:
         """Decode a message from ``image_path`` and log it against a sender.
 
         Returns a dict describing the outcome, including whether the message
         was special and whether the sender was "terminated" for talking too
-        much (the original game's rule, preserved).
+        much (the original game's rule, preserved). Raises
+        :class:`~spychat.crypto.CryptoError` if the message is encrypted and
+        the passphrase is missing or wrong.
         """
         self._check_friend_index(sender_index)
         raw = decode(image_path)
+
+        if is_encrypted(raw):
+            if not passphrase:
+                raise CryptoError("This message is encrypted; a passphrase is required.")
+            raw = decrypt(raw, passphrase)
 
         sent_by_me = raw.startswith("#")
         text = raw[1:] if sent_by_me else raw
@@ -147,4 +168,5 @@ class SpyChatApp:
             "is_special": is_special,
             "terminated": terminated,
             "sender_name": sender_name,
+            "sent_by_me": sent_by_me,
         }

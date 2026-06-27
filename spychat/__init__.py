@@ -1,6 +1,7 @@
 """SpyChat — hide secret messages inside images, spy-style."""
 
 from .app import SpyChatApp, ValidationError
+from .crypto import CryptoError, decrypt, encrypt
 from .models import ChatMessage, Profile, Spy
 from .steganography import (
     MessageTooLargeError,
@@ -20,6 +21,9 @@ __all__ = [
     "Spy",
     "encode",
     "decode",
+    "encrypt",
+    "decrypt",
+    "CryptoError",
     "SteganographyError",
     "MessageTooLargeError",
     "NoHiddenMessageError",

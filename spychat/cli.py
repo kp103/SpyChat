@@ -5,9 +5,11 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from getpass import getpass
 from typing import Callable, Optional
 
 from .app import SpyChatApp, ValidationError
+from .crypto import CryptoError, decrypt, encrypt, is_encrypted
 from .models import Profile
 from .steganography import SteganographyError
 from .storage import DEFAULT_PATH, ProfileStore
@@ -146,10 +148,12 @@ class SpyChatCLI:
         carrier = _prompt("Image to hide the message in: ")
         output = _prompt(f"Output image [{DEFAULT_OUTPUT_IMAGE}]: ") or DEFAULT_OUTPUT_IMAGE
         text = _prompt("Your secret message: ")
+        passphrase = getpass("Encryption passphrase (blank = none): ")
         try:
-            out = self.app.send_message(index, carrier, output, text)
-            print(f"Your secret is safe, spy! Hidden in: {out}")
-        except (ValidationError, SteganographyError) as exc:
+            out = self.app.send_message(index, carrier, output, text, passphrase)
+            tag = " (encrypted)" if passphrase else ""
+            print(f"Your secret is safe, spy!{tag} Hidden in: {out}")
+        except (ValidationError, SteganographyError, CryptoError) as exc:
             print(f"Mission aborted: {exc}")
         except FileNotFoundError:
             print(f"Mission aborted: image '{carrier}' not found.")
@@ -159,9 +163,10 @@ class SpyChatCLI:
         if index is None:
             return
         image = _prompt("Image file containing the secret: ")
+        passphrase = getpass("Passphrase (blank if not encrypted): ")
         try:
-            result = self.app.read_message(index, image)
-        except (ValidationError, SteganographyError) as exc:
+            result = self.app.read_message(index, image, passphrase)
+        except (ValidationError, SteganographyError, CryptoError) as exc:
             print(f"No message: {exc}")
             return
         except FileNotFoundError:
@@ -287,9 +292,11 @@ def build_parser() -> argparse.ArgumentParser:
     enc.add_argument("input_image")
     enc.add_argument("output_image")
     enc.add_argument("message")
+    enc.add_argument("-p", "--passphrase", help="Encrypt the message before hiding it.")
 
     dec = sub.add_parser("decode", help="Reveal a message from an image and exit.")
     dec.add_argument("image")
+    dec.add_argument("-p", "--passphrase", help="Passphrase to decrypt the message.")
 
     return parser
 
@@ -304,9 +311,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     if args.command == "encode":
         from .steganography import encode
 
+        message = args.message
+        if args.passphrase:
+            message = encrypt(message, args.passphrase)
         try:
-            out = encode(args.input_image, args.output_image, args.message)
-        except (SteganographyError, FileNotFoundError) as exc:
+            out = encode(args.input_image, args.output_image, message)
+        except (SteganographyError, CryptoError, FileNotFoundError) as exc:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
         print(f"Message hidden in {out}")
@@ -316,8 +326,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         from .steganography import decode
 
         try:
-            print(decode(args.image))
-        except (SteganographyError, FileNotFoundError) as exc:
+            raw = decode(args.image)
+            if is_encrypted(raw):
+                if not args.passphrase:
+                    print(
+                        "Error: this message is encrypted; pass --passphrase.",
+                        file=sys.stderr,
+                    )
+                    return 1
+                raw = decrypt(raw, args.passphrase)
+            print(raw)
+        except (SteganographyError, CryptoError, FileNotFoundError) as exc:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
         return 0

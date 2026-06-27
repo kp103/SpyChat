@@ -87,3 +87,18 @@ def test_send_empty_message_rejected(app, carrier, tmp_path):
     app.add_friend("Q", "Mr.", 40, 5.0)
     with pytest.raises(ValidationError):
         app.send_message(0, carrier, tmp_path / "o.png", "   ")
+
+
+def test_encrypted_send_read_roundtrip(app, carrier, tmp_path):
+    from spychat.crypto import CryptoError
+
+    app.add_friend("Q", "Mr.", 40, 5.0)
+    out = tmp_path / "enc.png"
+    app.send_message(0, carrier, out, "top secret", passphrase="swordfish")
+
+    # No passphrase => refused.
+    with pytest.raises(CryptoError):
+        app.read_message(0, out)
+    # Right passphrase => readable.
+    result = app.read_message(0, out, passphrase="swordfish")
+    assert result["text"] == "top secret"

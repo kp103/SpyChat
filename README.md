@@ -1,31 +1,37 @@
 # SpyChat 🕵️
 
-Hide secret messages **inside images**, spy-style. SpyChat is a small Python 3
-command-line app that conceals your text in the pixels of a picture using
-least-significant-bit (LSB) steganography — the image looks unchanged, but it
-carries a hidden payload only SpyChat can read back.
+Hide secret messages **inside images**, spy-style. SpyChat conceals your text in
+the pixels of a picture using least-significant-bit (LSB) steganography — the
+image looks unchanged, but it carries a hidden payload only SpyChat can read
+back. Optionally **encrypt** the message first, so even if someone extracts the
+hidden bytes they can't read them without your passphrase.
 
-It keeps a roster of "friend" spies, logs your encoded/decoded conversations,
-and persists everything to a local JSON profile.
+It ships with an **ultra-modern web UI** *and* a terminal CLI, keeps a roster of
+"friend" spies, logs your conversations, and persists everything to a local JSON
+profile.
 
 > Rewritten from the original Python 2 prototype: ported to Python 3, given a
-> self-contained steganography engine (no unmaintained dependencies),
-> validation, persistence, a test suite, and a real CLI.
+> self-contained steganography engine (no unmaintained dependencies), AES
+> encryption, persistence, a web app, a CLI, and a full test suite.
 
 ## Features
 
-- **Hide & reveal messages** in PNG/JPEG/BMP carrier images (output is always
+- 🖥️ **Modern web UI** — dark glassmorphism interface with drag-and-drop image
+  upload, live capacity meter, image preview, and toast notifications.
+- 🔒 **Optional encryption** — AES (Fernet) with a scrypt-derived key; hides
+  *and* protects the message.
+- 🖼️ **Hide & reveal messages** in PNG/JPEG/BMP carriers (output is always
   lossless PNG so the hidden bits survive).
-- **Interactive menu** to manage your spy identity, friends, statuses and chats.
-- **One-shot subcommands** (`encode` / `decode`) for scripting.
-- **Persistent profile** stored as JSON (atomic, crash-safe writes).
-- **Validated rules**: age gates, rating gates, capacity checks, clear errors.
-- **Tested**: full `pytest` suite covering steganography, app logic and storage.
+- ⌨️ **Terminal CLI** — interactive menu plus one-shot `encode`/`decode`.
+- 💾 **Persistent profile** stored as JSON (atomic, crash-safe writes).
+- ✅ **Validated rules** and clear errors; **36 passing tests**.
 
 ## Requirements
 
 - Python 3.9+
-- [Pillow](https://pypi.org/project/Pillow/) ≥ 9.0 (only runtime dependency)
+- [Pillow](https://pypi.org/project/Pillow/) ≥ 9.0 — image manipulation
+- [Flask](https://pypi.org/project/Flask/) ≥ 2.2 — web UI
+- [cryptography](https://pypi.org/project/cryptography/) ≥ 3.4 — message encryption
 
 ## Installation
 
@@ -41,14 +47,27 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Interactive mode
+### Web app (recommended)
+
+```bash
+spychat-web                   # or: python -m spychat.server
+# -> open http://127.0.0.1:5000
+```
+
+Options: `--host`, `--port`, `--profile PATH`, `--debug`. Set up your spy
+identity on first load, then drag an image into **Hide**, type a secret,
+optionally tick **Encrypt with passphrase**, and download the PNG. Use
+**Reveal** to extract a message back out.
+
+### Interactive terminal mode
 
 ```bash
 spychat                       # or: python -m spychat
 ```
 
 You'll set up a spy identity on first run; your profile is saved to
-`~/.spychat/profile.json` (override with `--profile PATH`).
+`~/.spychat/profile.json` (override with `--profile PATH`). The web app and CLI
+share the same profile and engine.
 
 ### One-shot encode / decode
 
@@ -83,8 +102,11 @@ would re-compress the pixels and destroy the hidden data, so `encode` refuses
 lossy output formats. A 64×64 image holds ~1.5 KB of text; larger images hold
 more (`spychat.steganography.capacity_for_text`).
 
-> ⚠️ Steganography hides the *existence* of a message; it is **not** encryption.
-> For confidentiality, encrypt the text before hiding it.
+> ⚠️ Steganography hides the *existence* of a message but is **not** encryption
+> on its own. For confidentiality, tick **Encrypt with passphrase** (web) or pass
+> a passphrase to `send_message` — SpyChat then seals the text with AES (Fernet)
+> using a scrypt-derived key before hiding it, so the bytes are useless without
+> the passphrase.
 
 ## Development
 
@@ -97,13 +119,19 @@ pytest                 # run the test suite
 
 ```
 spychat/
-  steganography.py   # LSB encode/decode engine (Pillow only)
-  models.py          # Spy, ChatMessage, Profile dataclasses
-  storage.py         # atomic JSON persistence
-  app.py             # business logic + validation (I/O-free, unit-tested)
-  cli.py             # argparse + interactive menu
-tests/               # pytest suite
-samples/carrier.jpg  # sample carrier image
+  steganography.py     # LSB embed/extract engine (Pillow only)
+  crypto.py            # AES (Fernet) + scrypt passphrase encryption
+  models.py            # Spy, ChatMessage, Profile dataclasses
+  storage.py           # atomic JSON persistence
+  app.py               # business logic + validation (I/O-free, unit-tested)
+  cli.py               # argparse + interactive terminal menu
+  server.py            # Flask REST API + serves the web UI
+  web/
+    templates/index.html
+    static/style.css   # ultra-modern glassmorphism theme
+    static/app.js      # single-page front-end
+tests/                 # pytest suite (steganography, crypto, app, storage, API)
+samples/carrier.jpg    # sample carrier image
 ```
 
 ## License

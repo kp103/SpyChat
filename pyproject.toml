@@ -18,13 +18,18 @@ classifiers = [
     "Topic :: Security :: Cryptography",
     "Environment :: Console",
 ]
-dependencies = ["Pillow>=9.0"]
+dependencies = [
+    "Pillow>=9.0",
+    "Flask>=2.2",
+    "cryptography>=3.4",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "pytest-cov>=4.0"]
 
 [project.scripts]
 spychat = "spychat.cli:main"
+spychat-web = "spychat.server:main"
 
 [project.urls]
 Homepage = "https://github.com/kp103/spychat"
@@ -32,6 +37,9 @@ Repository = "https://github.com/kp103/spychat"
 
 [tool.setuptools.packages.find]
 include = ["spychat*"]
+
+[tool.setuptools.package-data]
+spychat = ["web/templates/*.html", "web/static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
