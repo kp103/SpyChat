@@ -56,7 +56,19 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Web app (recommended)
+### Run in the browser with GitHub Codespaces (no local setup)
+
+1. On the repo's GitHub page: **Code ▸ Codespaces ▸ Create codespace** on the
+   `claude/missing-items-review-8cxadi` branch.
+2. Wait for it to build (deps install automatically via `.devcontainer`).
+3. In the Codespace terminal run:
+   ```bash
+   spychat-web --host 0.0.0.0
+   ```
+4. A popup offers to open the forwarded **port 5000** in your browser — click it
+   (or open the **Ports** tab and click the 🌐 for port 5000).
+
+### Web app (local)
 
 ```bash
 spychat-web                   # or: python -m spychat.server
