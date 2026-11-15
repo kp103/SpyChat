@@ -1,0 +1,12 @@
+services:
+  spychat:
+    build: .
+    image: spychat:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - spychat-data:/data
+    restart: unless-stopped
+
+volumes:
+  spychat-data:
